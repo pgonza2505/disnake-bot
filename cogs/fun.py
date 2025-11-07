@@ -1,46 +1,119 @@
+import random
 import disnake
 from disnake.ext import commands
+from utils.reddit import fetch_random_reddit_image
+from utils.http import _get_json
 
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(description="Echo back your text.")
-    async def echo(self, inter: disnake.ApplicationCommandInteraction, message: str):
-        await inter.response.send_message(message)
-    
-    @commands.user_command(name="Greet")
-    async def greet_user(self, inter: disnake.UserCommandInteraction, user: disnake.User):
-        await inter.response.send_message(f"Hey {user.mention}!")
-    
-    @commands.slash_command(description="Show a user's profile picture.")
-    async def pfp(
+    @commands.slash_command(name="fun", description="Fun & entertainment commands")
+    async def fun_group(self, inter: disnake.ApplicationCommandInteraction):
+        pass
+
+    @fun_group.sub_command(description="Send a random cat picture.")
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def cat(
         self,
         inter: disnake.ApplicationCommandInteraction,
-        user: disnake.User | None = commands.Param(default=None, description="Whose avatar"),
-        server_avatar: bool = commands.Param(default=True, description="Prefer server avatar if available"),
-        size: int = commands.Param(default=1024, choices=[128, 256, 512, 1024, 2048], description="Image size"),
+        subreddit: str = commands.Param(default="cats", description="cats, catpictures, etc."),
+        sort: str = commands.Param(default="hot", choices=["hot","new","top"]),
+        time: str = commands.Param(default="day", choices=["hour","day","week","month","year","all"]),
+        allow_nsfw: bool = commands.Param(default=False, description="Only if channel is NSFW"),
     ):
-        target = user or inter.author
+        if allow_nsfw and not getattr(inter.channel, "is_nsfw", lambda: False)():
+            return await inter.response.send_message("Channel isn’t NSFW.", ephemeral=True)
+        await inter.response.defer()
 
-        if isinstance(target, disnake.Member):
-            asset = (target.guild_avatar or target.display_avatar) if server_avatar else target.display_avatar
-        else:
-            asset = target.display_avatar
+        res = await fetch_random_reddit_image(subreddit, sort=sort, t=time, allow_nsfw=allow_nsfw)
+        if not res:
+            embed = disnake.Embed(title=f"r/{subreddit} didn’t cooperate. Have a cat anyway.", color=disnake.Color.blurple())
+            embed.set_image(url="https://cataas.com/cat")
+            return await inter.edit_original_response(embed=embed)
 
-        asset = asset.with_size(size)
-        png = asset.with_format("png").url
-        jpg = asset.with_format("jpg").url
-        webp = asset.with_format("webp").url
+        img, meta = res
+        embed = disnake.Embed(title=meta["title"], url=meta["permalink"], color=disnake.Color.blurple())
+        embed.set_image(url=img)
+        embed.set_footer(text=f"r/{meta['subreddit']} • by u/{meta['author']} • {meta['score']} upvotes")
+        await inter.edit_original_response(embed=embed)
 
-        embed = disnake.Embed(title=f"{target.display_name}'s avatar", color=disnake.Color.blurple())
-        embed.set_image(url=png)
-        embed.set_footer(text=f"{size}px • server_avatar={server_avatar}")
+    @fun_group.sub_command(description="Send a random dog picture.")
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def dog(self, inter: disnake.ApplicationCommandInteraction):
+        await inter.response.defer()
+        data = await _get_json("https://random.dog/woof.json")
+        url = data.get("url") if data else None
+        if url and any(url.lower().endswith(v) for v in (".mp4",".webm",".mov")):
+            data = await _get_json("https://random.dog/woof.json")
+            url = data.get("url") if data else None
+        if not url:
+            return await inter.edit_original_response("Dog API had a moment.")
+        embed = disnake.Embed(title="🐶 Woof", color=disnake.Color.blurple())
+        embed.set_image(url=url)
+        await inter.edit_original_response(embed=embed)
 
-        await inter.response.send_message(
-            f"Links: [PNG]({png}) | [JPG]({jpg}) | [WEBP]({webp})",
-            embed=embed
-        )
+    @fun_group.sub_command(description="Fetch a random meme.")
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def meme(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        kind: str = commands.Param(default="memes", choices=["memes","dankmemes","meirl","wholesomememes","ProgrammerHumor"]),
+        sort: str = commands.Param(default="hot", choices=["hot","new","top"]),
+        time: str = commands.Param(default="day", choices=["hour","day","week","month","year","all"]),
+        allow_nsfw: bool = commands.Param(default=False)
+    ):
+        if allow_nsfw and not getattr(inter.channel, "is_nsfw", lambda: False)():
+            return await inter.response.send_message("Channel isn’t NSFW.", ephemeral=True)
+        await inter.response.defer()
+
+        res = await fetch_random_reddit_image(kind, sort=sort, t=time, allow_nsfw=allow_nsfw)
+        if not res:
+            return await inter.edit_original_response(f"r/{kind} didn’t cooperate.")
+        img, meta = res
+        embed = disnake.Embed(title=meta["title"], url=meta["permalink"], color=disnake.Color.blurple())
+        embed.set_image(url=img)
+        embed.set_footer(text=f"r/{meta['subreddit']} • by u/{meta['author']} • {meta['score']} upvotes")
+        await inter.edit_original_response(embed=embed)
+
+    @fun_group.sub_command(name="8ball", description="Ask the magic 8-ball a question.")
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def eightball(self, inter: disnake.ApplicationCommandInteraction, question: str):
+        await inter.response.defer()
+        normal = [
+            "It is certain.", "Without a doubt.", "Yes.", "Ask again later.",
+            "Reply hazy, try again.", "Better not tell you now.", "Don’t count on it.",
+            "My reply is no.", "Very doubtful."
+        ]
+        rude = [
+            "No. And that question hurt my circuits.",
+            "Absolutely not. Touch grass.",
+            "Ask a better question."
+        ]
+        answer = random.choice(rude) if random.randint(1, 200) == 1 else random.choice(normal)
+        embed = disnake.Embed(title="🎱 The Magic 8-Ball", color=disnake.Color.blurple())
+        embed.add_field(name="Question", value=question, inline=False)
+        embed.add_field(name="Answer", value=answer, inline=False)
+        await inter.edit_original_response(embed=embed)
+
+    @fun_group.sub_command(description="Roll dice, e.g., 3d6 with optional modifier.")
+    @commands.cooldown(1, 2, commands.BucketType.user)
+    async def roll(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        count: int = commands.Param(default=1, ge=1, le=30, description="How many dice"),
+        sides: int = commands.Param(default=6, choices=[4,6,8,10,12,20,100], description="Die type"),
+        modifier: int = commands.Param(default=0, description="Add/subtract after rolling"),
+    ):
+        await inter.response.defer()
+        rolls = [random.randint(1, sides) for _ in range(count)]
+        total = sum(rolls) + modifier
+        preview = ", ".join(map(str, rolls[:50])) + ("..." if len(rolls) > 50 else "")
+        head = f"{count}d{sides}{('+' if modifier>=0 else '')}{modifier}"
+        embed = disnake.Embed(title=f"🎲 {head}", color=disnake.Color.blurple())
+        embed.add_field(name="Rolls", value=preview or "—", inline=False)
+        embed.add_field(name="Total", value=str(total), inline=True)
+        await inter.edit_original_response(embed=embed)
 
 def setup(bot):
     bot.add_cog(Fun(bot))
