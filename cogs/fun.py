@@ -13,10 +13,7 @@ class Fun(commands.Cog):
     async def greet_user(self, inter: disnake.UserCommandInteraction, user: disnake.User):
         await inter.response.send_message(f"Hey {user.mention}!")
     
-    @commands.slash_command(
-        description="Show a user's profile picture.",
-        guild_ids=[1435392580002119683],
-    )
+    @commands.slash_command(description="Show a user's profile picture.")
     async def pfp(
         self,
         inter: disnake.ApplicationCommandInteraction,
@@ -26,7 +23,6 @@ class Fun(commands.Cog):
     ):
         target = user or inter.author
 
-        # If we’re in a guild, try server avatar when requested
         if isinstance(target, disnake.Member):
             asset = (target.guild_avatar or target.display_avatar) if server_avatar else target.display_avatar
         else:

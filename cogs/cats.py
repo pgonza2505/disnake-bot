@@ -4,7 +4,7 @@ import disnake
 from disnake.ext import commands
 
 REDDIT_BASE = "https://www.reddit.com"
-UA = "disnake-bot/1.0 (by u/your_username_or_bot_name)"  # anything unique
+UA = "disnake-bot/1.0 (by u/your_username_or_bot_name)"
 
 def _good_image(post: dict, allow_nsfw: bool) -> str | None:
     """Return a direct image URL if the post looks usable, else None."""
@@ -22,7 +22,7 @@ def _good_image(post: dict, allow_nsfw: bool) -> str | None:
     lower = url.lower()
     if any(lower.endswith(ext) for ext in (".jpg", ".jpeg", ".png", ".gif", ".gifv", ".webp")):
         if lower.endswith(".gifv"):
-            url = url[:-1]  # convert gifv → gif
+            url = url[:-1]
         return url
 
     if "i.redd.it" in lower or "preview.redd.it" in lower or "i.imgur.com" in lower:
@@ -84,10 +84,7 @@ class Cats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(
-        description="Send a random cat picture from a cat subreddit.",
-        guild_ids=[1435392580002119683],
-    )
+    @commands.slash_command(description="Send a random cat picture from a cat subreddit.")
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def cat(
         self,
@@ -120,7 +117,6 @@ class Cats(commands.Cog):
 
         result = await fetch_random_reddit_image(subreddit, sort, time, allow_nsfw)
         if result is None:
-            # fallback to CATAAS
             img_url = await cataas_fallback()
             embed = disnake.Embed(
                 title=f"r/{subreddit} didn’t cooperate. Here’s a cat anyway.",

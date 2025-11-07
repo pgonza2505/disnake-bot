@@ -40,7 +40,7 @@ class Fun(commands.Cog):
     async def on_command_error(self, ctx, error):
         print(f"Prefix cmd error: {error}")
 
-initial_extensions = ["cogs.fun", "cogs.cats"]
+initial_extensions = ["cogs.fun", "cogs.cats", "cogs.entertainment", "cogs.utility"]
 
 for ext in initial_extensions:
     try:
