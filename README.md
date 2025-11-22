@@ -57,6 +57,7 @@ disnake-bot/
 │  ├─ util.py       # /util commands
 │  └─ context.py    # context menu commands (e.g., Greet)
 └─ utils/
+   ├─ autoupdate.py # Autoupdate helper
    ├─ http.py       # HTTP helper for safe requests
    └─ reddit.py     # Reddit image fetcher logic
 ```
