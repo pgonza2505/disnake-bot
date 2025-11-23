@@ -15,26 +15,25 @@ class Fun(commands.Cog):
     async def fun_group(self, inter: disnake.ApplicationCommandInteraction):
         pass
 
-    @fun_group.sub_command(description="Send a random cat picture.")
-    @commands.cooldown(1, 3, commands.BucketType.user)
+    @fun_group.sub_command(name="cat", description="Get a random cat picture.")
     async def cat(
         self,
         inter: disnake.ApplicationCommandInteraction,
-        subreddit: str = commands.Param(default="cats", description="cats, catpictures, etc."),
-        sort: str = commands.Param(default="hot", choices=["hot","new","top"]),
-        time: str = commands.Param(default="day", choices=["hour","day","week","month","year","all"]),
-        allow_nsfw: bool = commands.Param(default=False, description="Only if channel is NSFW"),
+        sort: str = commands.Param(default="hot"),
+        time: str = commands.Param(default="day"),
+        allow_nsfw: bool = commands.Param(default=False),
     ):
-        if allow_nsfw and not getattr(inter.channel, "is_nsfw", lambda: False)():
-            return await inter.response.send_message("Channel isn’t NSFW.", ephemeral=True)
         await inter.response.defer()
 
-        res = await fetch_random_reddit_image(subreddit, sort=sort, t=time, allow_nsfw=allow_nsfw)
-        if not res:
-            embed = disnake.Embed(title=f"r/{subreddit} didn’t cooperate. Have a cat anyway.", color=disnake.Color.blurple())
-            embed.set_image(url="https://cataas.com/cat")
-            return await inter.edit_original_response(embed=embed)
+        # First try Reddit
+        img_url = await fetch_random_reddit_image(
+            "cats",
+            sort=sort,
+            t=time,
+            allow_nsfw=allow_nsfw,
+        )
 
+        # If Reddit fails, fallback to TheCatAPI
         if img_url is None:
             data = await _get_json(CAT_FALLBACK_API)
             if data and isinstance(data, list) and data[0].get("url"):
@@ -43,11 +42,9 @@ class Fun(commands.Cog):
         if img_url is None:
             await inter.edit_original_response("Couldn't fetch a cat. Reality is broken.")
             return
-
-        img, meta = res
-        embed = disnake.Embed(title=meta["title"], url=meta["permalink"], color=disnake.Color.blurple())
-        embed.set_image(url=img)
-        embed.set_footer(text=f"r/{meta['subreddit']} • by u/{meta['author']} • {meta['score']} upvotes")
+        
+        embed = disnake.Embed(title="Random Cat")
+        embed.set_image(url=img_url)
         await inter.edit_original_response(embed=embed)
 
     @fun_group.sub_command(description="Send a random dog picture.")
@@ -65,20 +62,23 @@ class Fun(commands.Cog):
         embed.set_image(url=url)
         await inter.edit_original_response(embed=embed)
 
-    @fun_group.sub_command(description="Fetch a random meme.")
-    @commands.cooldown(1, 3, commands.BucketType.user)
+    @fun_group.sub_command(name="meme", description="Get a random meme.")
     async def meme(
         self,
         inter: disnake.ApplicationCommandInteraction,
-        kind: str = commands.Param(default="memes", choices=["memes","dankmemes","meirl","wholesomememes","ProgrammerHumor"]),
-        sort: str = commands.Param(default="hot", choices=["hot","new","top"]),
-        time: str = commands.Param(default="day", choices=["hour","day","week","month","year","all"]),
-        allow_nsfw: bool = commands.Param(default=False)
+        subreddit: str = commands.Param(default="memes"),
     ):
-        if allow_nsfw and not getattr(inter.channel, "is_nsfw", lambda: False)():
-            return await inter.response.send_message("Channel isn’t NSFW.", ephemeral=True)
         await inter.response.defer()
-        
+
+        # Try Reddit first
+        img_url = await fetch_random_reddit_image(
+            subreddit,
+            sort="hot",
+            t="day",
+            allow_nsfw=False,
+        )
+
+        # If Reddit fails, try meme-api
         if img_url is None:
             data = await _get_json(MEME_FALLBACK_API)
             if data and data.get("url"):
@@ -88,13 +88,8 @@ class Fun(commands.Cog):
             await inter.edit_original_response("Couldn't fetch a meme. The internet has failed us.")
             return
 
-        res = await fetch_random_reddit_image(kind, sort=sort, t=time, allow_nsfw=allow_nsfw)
-        if not res:
-            return await inter.edit_original_response(f"r/{kind} didn’t cooperate.")
-        img, meta = res
-        embed = disnake.Embed(title=meta["title"], url=meta["permalink"], color=disnake.Color.blurple())
-        embed.set_image(url=img)
-        embed.set_footer(text=f"r/{meta['subreddit']} • by u/{meta['author']} • {meta['score']} upvotes")
+        embed = disnake.Embed(title=f"Random meme from r/{subreddit}")
+        embed.set_image(url=img_url)
         await inter.edit_original_response(embed=embed)
 
     @fun_group.sub_command(name="8ball", description="Ask the magic 8-ball a question.")
