@@ -23,6 +23,7 @@ bot.launch_time = datetime.now(timezone.utc)
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (id={bot.user.id})")
+    await bot.change_presence(activity=disnake.Game("Attention: This is not a drill."))
 
 initial_extensions = [
     "cogs.fun",
