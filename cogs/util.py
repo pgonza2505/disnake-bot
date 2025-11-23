@@ -156,7 +156,7 @@ class Util(commands.Cog):
         await inter.response.send_message(f"Looking up **{word}**...", ephemeral=True)
         import json, urllib.request, urllib.error
         def _get(url: str):
-            req = urllib.request.Request(url, headers={"User-Agent":"disnake-bot/util"})
+            req = urllib.request.Request(url, headers={"User-Agent":"SerpentCore/define (Discord Bot)"})
             try:
                 with urllib.request.urlopen(req, timeout=8) as r:
                     if r.status != 200: return None

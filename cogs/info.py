@@ -41,7 +41,7 @@ class Info(commands.Cog):
         latency_ms = round(self.bot.latency * 1000)
 
         embed = disnake.Embed(
-            title="Bot Statistics",
+            title="SerpentCore • Statistics",
             color=disnake.Color.blurple(),
             timestamp=now,
         )
@@ -75,10 +75,11 @@ class Info(commands.Cog):
     )
     async def help_command(self, inter: disnake.ApplicationCommandInteraction):
         embed = disnake.Embed(
-            title="disnake bot • Help",
+            title="SerpentCore • Help",
             description="Here’s what I can do. Command names are shown without `/`.",
             color=disnake.Color.green(),
             timestamp=datetime.now(timezone.utc),
+            
         )
 
         # Adjust these lists if you add/remove commands later.
@@ -88,7 +89,7 @@ class Info(commands.Cog):
                 "`cat` – random cat picture\n"
                 "`dog` – random dog picture\n"
                 "`meme` – random meme\n"
-                "`eightball` – magic 8-ball\n"
+                "`8ball` – magic 8-ball\n"
                 "`roll` – roll dice, like `3d6`\n"
             ),
             inline=False,
@@ -124,7 +125,7 @@ class Info(commands.Cog):
             inline=False,
         )
 
-        embed.set_footer(text="Commands may be restricted by your server permissions.")
+        embed.set_footer(text="Powered by disnake • Hosted on Raspberry Pi")
 
         await inter.response.send_message(embed=embed, ephemeral=True)
 

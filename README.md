@@ -1,117 +1,92 @@
-# disnake-bot
+# SerpentCore
 
 ![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)
 ![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
 ![Python 3.13](https://img.shields.io/badge/python%203.13-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white)
 
-A small, modular Discord bot built with [disnake]. It uses slash commands, context menus, and command groups for clean organization.
+SerpentCore is a small, modular Discord bot built with **disnake**. It uses slash commands, context menus, and organized command groups for clean structure and easy maintenance. Designed to run beautifully on a Raspberry Pi.
 
 ## Command Groups
+
 ### Core Commands
 
-`/ping` — check bot latency
+`/ping` — check bot latency  
+`/echo` — echo back your message  
+`/pfp` — show a user's avatar (supports server avatars & custom sizes)  
+**Greet** (user context menu) — greet a user via right-click  
 
-`/echo` — echo back your message
+### Fun (`/fun ...`)
 
-`/pfp` — show a user's profile picture (supports server avatars & custom sizes)
+`/fun cat` — random cat from Reddit with a CATAAS fallback  
+`/fun dog` — random dog from Random.Dog  
+`/fun meme` — random meme (r/memes, r/dankmemes, etc.)  
+`/fun 8ball` — magic 8-ball (1/200 chance of a rare rude response)  
+`/fun roll` — dice roller (custom dice count, sides, and modifiers)  
 
-`Greet` (user context menu) — greet a user directly from right-click
+### Utility (`/util ...`)
 
-### Fun Commands (`/fun ...`)
-
-Grouped under the `/fun` command namespace for entertainment and randomness.
-
-`/fun cat` — random cat from Reddit with a CATAAS fallback
-
-`/fun dog` — random dog from Random.Dog
-
-`/fun meme` — meme from Reddit (r/memes, r/dankmemes, etc.)
-
-`/fun 8ball` — ask the magic 8-ball a question (1/200 chance of a special response)
-
-`/fun roll` — roll dice (supports custom dice count, sides, and modifiers)
-
-### Utility Commands (`/util ...`)
-
-Grouped under the `/util` command namespace for server info, reminders, and productivity.
-
-`/util userinfo` — view information about a user (roles, join date, account age)
-
-`/util serverinfo` — view server statistics and creation info
-
-`/util remindme` — set a reminder with custom delay and optional DM delivery
-
-`/util poll` — create a quick reaction-based poll with up to 5 options
-
-`/util stats` — check bot uptime, latency, and server count
-
-`/util define` — fetch English word definitions via dictionaryapi.dev
+`/util userinfo` — view user roles, join date, account age  
+`/util serverinfo` — view server creation info and statistics  
+`/util remindme` — lightweight reminder system  
+`/util poll` — reaction-based polls (up to 5 options)  
+`/util stats` — bot uptime, latency, and server count  
+`/util define` — fetch definitions via dictionaryapi.dev  
 
 ### Moderation Commands
 
-Used for user management, mod logging, and viewing mod actions.
+`/purge` — bulk delete messages  
+`/slowmode` — set channel slowmode  
+`/say` — send a message as the bot  
+`/kick` — remove a user  
+`/ban` — ban a user + delete message history (optional)  
+`/warn` — issue a stored warning  
+`/warnings` — view all warnings for a user  
+`/clearwarnings` — wipe warnings  
+`/timeout` — apply a timeout  
+`/untimeout` — remove a timeout  
+`/modlog set|disable|show` — configure mod logging channel  
 
-`/purge` — deletes a set amount of messages in a channel
+---
 
-`/slowmode` — sets the channel's slowmode
+## Project Structure
 
-`/say` — send a message as the bot
-
-`/kick` — kicks a user out of the server with an optional reason
-
-`/ban` — bans a user from the server with an optional reason and deleting up to seven days of messages
-
-`/warn` — warns a user with an optional reason and whether to DM the user or not
-
-`/warnings` — view all warnings for a user
-
-`/clearwarnings` — clears all warnings from a user
-
-`/timeout` — places a timeout on a user with a duration
-
-`/untimeout` — removes a timeout on a user with a timeout
-
-## Modular Structure
 ```bash
-disnake-bot/
+SerpentCore/
 ├─ bot.py
 ├─ cogs/
 │  ├─ fun.py        # /fun commands
 │  ├─ util.py       # /util commands
 │  ├─ moderation.py # moderation commands
-│  └─ context.py    # context menu commands (e.g., Greet)
+│  ├─ info.py       # helpful commands
+│  └─ context.py    # context menu commands
 └─ utils/
-   ├─ autoupdate.py # Autoupdate helper
-   ├─ http.py       # HTTP helper for safe requests
-   └─ reddit.py     # Reddit image fetcher logic
+   ├─ autoupdate.py # Git auto-updater
+   ├─ http.py       # HTTP request helper
+   └─ reddit.py     # Reddit media fetcher
 ```
-
-Each cog is self-contained, so adding new commands or categories is straightforward.
-
-## Setup
-
-1. **Python 3.10+** required.
-2. Create a bot in the [Discord Developer Portal](https://discord.com/developers/applications).
-    - Invite it with scopes `bot` and `applications.commands`.
-    - Enable only the intents you actually use.
-3. Clone this repository and install dependencies:
-```bash
+Setup
+1. Python 3.10+
+2. Create a bot in the Developer Portal
+- Enable only the intents you need
+- Invite with scopes: bot and applications.commands
+3. Clone & install:
+```
 python -m venv .venv
-. .venv/Scripts/activate      # or source .venv/bin/activate (Linux/macOS)
+. .venv/Scripts/activate     # Windows
+source .venv/bin/activate    # Linux/macOS
 pip install -r requirements.txt
 ```
-4. Create a .env file and add your bot token:
-```bash
+4. Place your bot token in .env:
+```
 DISCORD_TOKEN=your_token_here
 ```
-5. Run the bot:
-```bash
+
+5. Run:
+```
 python bot.py
 ```
 ## Development Tips
-
-- Add `guild_ids=[YOUR_GUILD_ID]` to command decorators for instant visibility while testing.
-- Remove it for **global sync** when deploying (Discord may take up to an hour).
-- Use `Ctrl+R` in Discord to hard reload if commands don’t appear after sync.
-- To add new command categories, just create a new cog in `/cogs/` and load it in `bot.py`.
+Add `guild_ids=[YOUR_ID]` to slash commands for instant sync during testing
+Hit `Ctrl+R` in Discord for a hard UI reload if commands don’t appear
+New cogs can be dropped into `/cogs/` and added to `initial_extensions`
