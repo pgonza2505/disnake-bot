@@ -4,6 +4,9 @@ from disnake.ext import commands
 from utils.reddit import fetch_random_reddit_image
 from utils.http import _get_json
 
+CAT_FALLBACK_API = "https://api.thecatapi.com/v1/images/search"
+MEME_FALLBACK_API = "https://meme-api.com/gimme"
+
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -31,6 +34,15 @@ class Fun(commands.Cog):
             embed = disnake.Embed(title=f"r/{subreddit} didn’t cooperate. Have a cat anyway.", color=disnake.Color.blurple())
             embed.set_image(url="https://cataas.com/cat")
             return await inter.edit_original_response(embed=embed)
+
+        if img_url is None:
+            data = await _get_json(CAT_FALLBACK_API)
+            if data and isinstance(data, list) and data[0].get("url"):
+                img_url = data[0]["url"]
+
+        if img_url is None:
+            await inter.edit_original_response("Couldn't fetch a cat. Reality is broken.")
+            return
 
         img, meta = res
         embed = disnake.Embed(title=meta["title"], url=meta["permalink"], color=disnake.Color.blurple())
@@ -66,6 +78,15 @@ class Fun(commands.Cog):
         if allow_nsfw and not getattr(inter.channel, "is_nsfw", lambda: False)():
             return await inter.response.send_message("Channel isn’t NSFW.", ephemeral=True)
         await inter.response.defer()
+        
+        if img_url is None:
+            data = await _get_json(MEME_FALLBACK_API)
+            if data and data.get("url"):
+                img_url = data["url"]
+
+        if img_url is None:
+            await inter.edit_original_response("Couldn't fetch a meme. The internet has failed us.")
+            return
 
         res = await fetch_random_reddit_image(kind, sort=sort, t=time, allow_nsfw=allow_nsfw)
         if not res:
