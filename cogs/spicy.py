@@ -98,7 +98,7 @@ class Spicy(commands.Cog):
     async def r34_slash(
         self,
         inter: disnake.ApplicationCommandInteraction,
-        tags: str = Option("", "Space-separated tags (max 5)"),
+        tags: str = Option(" ", "Space-separated tags (max 5)"),
         results: int = Option(1, "Number of results (1-5)", min_value=1, max_value=5),
         videos: bool = Option(False, "Include video files (mp4/webm/etc.)")
     ):
