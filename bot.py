@@ -2,6 +2,7 @@ import os
 import disnake
 from disnake.ext import commands
 from dotenv import load_dotenv
+from datetime import datetime, timezone
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -13,9 +14,11 @@ sync_flags = commands.CommandSyncFlags.default()
 sync_flags.sync_commands_debug = True
 
 bot = commands.InteractionBot(
+    command_sync_flags=sync_flags,
     intents=intents,
-    command_sync_flags=sync_flags
 )
+
+bot.launch_time = datetime.now(timezone.utc)
 
 @bot.event
 async def on_ready():
@@ -26,6 +29,8 @@ initial_extensions = [
     "cogs.util",
     "cogs.context",
     "cogs.moderation",
+    "cogs.info",
+    "cogs.spicy",
 ]
 
 for ext in initial_extensions:
