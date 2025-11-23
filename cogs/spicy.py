@@ -31,12 +31,27 @@ class Spicy(commands.Cog):
     """R34 image fetcher. Restricts blacklisted/illegal tags and requires NSFW channel."""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.session = aiohttp.ClientSession()
+        self.session = None  # create session in cog_load (async) to avoid "no running event loop"
+
+    async def cog_load(self):
+        # Called when the cog is loaded; safe to create async resources here
+        if not self.session or getattr(self.session, "closed", True):
+            self.session = aiohttp.ClientSession()
 
     async def cog_unload(self):
-        await self.session.close()
+        # Close session when cog is unloaded
+        if getattr(self, "session", None):
+            try:
+                if not getattr(self.session, "closed", True):
+                    await self.session.close()
+            except Exception:
+                pass
 
     async def fetch_posts(self, tags: str):
+        # ensure session exists (safety for any lazy calls)
+        if not getattr(self, "session", None) or getattr(self.session, "closed", True):
+            self.session = aiohttp.ClientSession()
+
         url = API_BASE + urllib.parse.quote_plus(tags)
         async with self.session.get(url, timeout=15) as resp:
             if resp.status != 200:
@@ -95,7 +110,7 @@ class Spicy(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.slash_command(name="r34", description="Fetch images from rule34.xxx (NSFW only)")
-    async def r34_slash(
+    async def r34(
         self,
         inter: disnake.ApplicationCommandInteraction,
         tags: str = commands.Param(default="", description="Space-separated tags (max 5)"),
