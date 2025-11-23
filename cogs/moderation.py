@@ -412,64 +412,67 @@ class Moderation(commands.Cog):
 
     # ------------- Timeouts ------------- #
 
-    @commands.slash_command(
+        @commands.slash_command(
         name="timeout",
         description="Timeout a member for a period of time.",
         dm_permission=False,
         default_member_permissions=disnake.Permissions(moderate_members=True),
     )
-    async def timeout(
-        self,
-        inter: disnake.ApplicationCommandInteraction,
-        user: disnake.Member = commands.Param(description="Member to timeout."),
-        minutes: int = commands.Param(
-            ge=1,
-            le=10080,
-            description="Duration in minutes (1–10080, up to 7 days).",
-        ),
-        reason: str = commands.Param(
-            default="No reason provided.",
-            description="Reason for the timeout.",
-        ),
-    ):
-        if user == inter.author:
-            return await inter.response.send_message(
-                "Timing yourself out is just called going to bed.",
-                ephemeral=True,
-            )
-        if user == inter.guild.me:
-            return await inter.response.send_message(
-                "I’m not timing myself out.",
-                ephemeral=True,
-            )
+        async def timeout(
+            self,
+            inter: disnake.ApplicationCommandInteraction,
+            user: disnake.Member = commands.Param(description="Member to timeout."),
+            minutes: int = commands.Param(
+                ge=1,
+                le=10080,  # up to 7 days
+                description="Duration in minutes (1–10080).",
+            ),
+            reason: str = commands.Param(
+                default="No reason provided.",
+                description="Reason for the timeout.",
+            ),
+        ):
+            if user == inter.author:
+                return await inter.response.send_message(
+                    "Timing yourself out is just called going to bed.",
+                    ephemeral=True,
+                )
+            if user == inter.guild.me:
+                return await inter.response.send_message(
+                    "I’m not timing myself out.",
+                    ephemeral=True,
+                )
 
-        duration = timedelta(minutes=minutes)
-        try:
-            await user.timeout(duration, reason=f"{inter.author} | {reason}")
-        except AttributeError:
+            duration = timedelta(minutes=minutes)
+
+            # Use edit(timeout=...) which is stable across disnake versions
             try:
-                await user.edit(timeout=datetime.now(timezone.utc) + duration, reason=f"{inter.author} | {reason}")
+                await user.edit(
+                    timeout=datetime.now(timezone.utc) + duration,
+                    reason=f"{inter.author} | {reason}",
+                )
             except Exception as e:
                 return await inter.response.send_message(
                     f"Failed to timeout user: `{e}`",
                     ephemeral=True,
                 )
 
-        await inter.response.send_message(
-            f"⏰ Timed out **{user}** for **{minutes}** minute(s).",
-            ephemeral=True,
-        )
+            await inter.response.send_message(
+                f"⏰ Timed out **{user}** for **{minutes}** minute(s).",
+                ephemeral=True,
+            )
 
-        embed = disnake.Embed(
-            title="Member Timed Out",
-            color=disnake.Color.dark_gold(),
-            timestamp=datetime.now(timezone.utc),
-        )
-        embed.add_field("User", f"{user} ({user.id})", inline=True)
-        embed.add_field("Moderator", f"{inter.author} ({inter.author.id})", inline=True)
-        embed.add_field("Duration (min)", str(minutes), inline=True)
-        embed.add_field("Reason", reason, inline=False)
-        await self._send_modlog(inter.guild, embed)
+            # Log to modlog
+            embed = disnake.Embed(
+                title="Member Timed Out",
+                color=disnake.Color.dark_gold(),
+                timestamp=datetime.now(timezone.utc),
+            )
+            embed.add_field("User", f"{user} ({user.id})", inline=True)
+            embed.add_field("Moderator", f"{inter.author} ({inter.author.id})", inline=True)
+            embed.add_field("Duration (min)", str(minutes), inline=True)
+            embed.add_field("Reason", reason, inline=False)
+            await self._send_modlog(inter.guild, embed)
 
     @commands.slash_command(
         name="untimeout",
