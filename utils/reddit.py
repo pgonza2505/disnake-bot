@@ -13,7 +13,7 @@ UA_LINUX = (
     "Chrome/120.0.0.0 Safari/537.36"
 )
 
-BASE_URL = "https://www.reddit.com"
+BASE_URL = "https://old.reddit.com"
 
 def _image_from_post(post: dict, allow_nsfw: bool) -> str | None:
     data = post.get("data", {}) or {}
