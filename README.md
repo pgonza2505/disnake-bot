@@ -7,14 +7,7 @@
 
 SerpentCore is a small, modular Discord bot built with **disnake**. It uses slash commands, context menus, and organized command groups for clean structure and easy maintenance. Designed to run beautifully on a Raspberry Pi.
 
-## Command Groups
-
-### Core Commands
-
-`/ping` — check bot latency  
-`/echo` — echo back your message  
-`/pfp` — show a user's avatar (supports server avatars & custom sizes)  
-**Greet** (user context menu) — greet a user via right-click  
+## Command Groups 
 
 ### Fun (`/fun ...`)
 
